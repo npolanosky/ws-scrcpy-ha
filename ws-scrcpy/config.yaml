@@ -9,6 +9,9 @@ arch:
   - amd64
   - aarch64
   - armv7
+stage: stable
+startup: application
+boot: auto
 # We provide our own ENTRYPOINT/CMD (tini -> run.sh) rather than the
 # Supervisor s6 init.
 init: false
