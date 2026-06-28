@@ -28,6 +28,19 @@ if [ "$DEBUG" = "true" ]; then
     export WS_SCRCPY_DEBUG=1
 fi
 
+# Persist the adb client RSA key on the add-on's /data volume (which survives
+# restarts, updates and host reboots). Without this, the key lives in the
+# ephemeral container filesystem and is regenerated on every add-on update, so
+# devices re-prompt to authorize "this computer" each time. Pointing HOME at
+# /data makes adb keep its key in /data/.android/adbkey permanently, so you only
+# authorize once ("Always allow from this computer").
+export HOME=/data
+mkdir -p /data/.android
+if [ ! -f /data/.android/adbkey ]; then
+    echo "[ws-scrcpy] generating persistent adb key in /data/.android"
+    adb keygen /data/.android/adbkey || echo "[ws-scrcpy] warning: 'adb keygen' failed (a key will be auto-generated)"
+fi
+
 echo "[ws-scrcpy] starting adb server..."
 adb start-server || echo "[ws-scrcpy] warning: 'adb start-server' failed (continuing)"
 

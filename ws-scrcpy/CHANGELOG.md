@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.2
+
+- Persist the adb client RSA key on the `/data` volume so it survives add-on
+  updates, restarts and host reboots. Devices (e.g. Nvidia Shield) now only need
+  to authorize "this computer" once instead of re-prompting after every update.
+
 ## 0.9.1
 
 - Deep-link URLs can now carry video settings directly, so an embedded URL is
