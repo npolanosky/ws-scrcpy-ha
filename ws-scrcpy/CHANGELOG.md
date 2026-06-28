@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.4
+
+- Embed mode now places the controls along the bottom (horizontal) instead of
+  down the right side, so a 16:9 card matches the device with minimal
+  letterboxing.
+
 ## 0.9.3
 
 - Add an embed layout mode (`&embed=1` on the stream URL) that scales the video

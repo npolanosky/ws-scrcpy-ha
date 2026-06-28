@@ -1,5 +1,5 @@
 name: ws-scrcpy
-version: "0.9.3"
+version: "0.9.4"
 slug: ws_scrcpy
 description: Control and mirror Android devices from your browser (web client for scrcpy)
 url: https://github.com/npolanosky/ws-scrcpy-ha/tree/master/ws-scrcpy

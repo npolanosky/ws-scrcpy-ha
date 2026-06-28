@@ -134,27 +134,35 @@ body.stream {
 body.embed .device-view {
     float: none;
     display: flex;
-    flex-direction: row;
+    flex-direction: column; /* video on top, controls along the bottom */
     width: 100%;
     height: 100%;
-}
-
-body.embed .control-buttons-list {
-    float: none;
-    flex: 0 0 auto;
-    height: 100%;
-    overflow-y: auto;
-    order: 2; /* keep the toolbar on the right, video on the left */
 }
 
 body.embed .video {
     position: relative; /* containing block for the absolutely-positioned layers */
     float: none;
+    order: 1;
     flex: 1 1 auto;
-    width: auto !important; /* override the inline px size set per frame */
-    height: 100% !important;
+    width: 100% !important; /* override the inline px size set per frame */
+    height: auto !important;
     min-width: 0;
     min-height: 0;
+}
+
+body.embed .control-buttons-list {
+    float: none;
+    order: 2;
+    flex: 0 0 auto;
+    width: 100%;
+    height: auto;
+    display: flex;
+    flex-direction: row; /* lay the buttons out horizontally */
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    overflow-x: auto;
+    overflow-y: hidden;
 }
 
 body.embed .video-layer,
