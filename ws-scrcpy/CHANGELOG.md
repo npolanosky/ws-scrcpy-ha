@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.1
+
+- Deep-link URLs can now carry video settings directly, so an embedded URL is
+  self-contained and no longer depends on per-browser localStorage:
+  `bitrate`, `maxFps`, `maxWidth`, `maxHeight`, `iFrameInterval`, `fitToScreen`.
+  Example: `…#!action=stream&udid=…&player=mse&bitrate=8000000&maxFps=60&maxWidth=1920&maxHeight=1920`.
+- Makes embedding in a Home Assistant dashboard (Webpage card / iframe) reliable.
+
 ## 0.9.0
 
 - Initial release of the ws-scrcpy Home Assistant add-on.

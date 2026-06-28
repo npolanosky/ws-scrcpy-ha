@@ -158,7 +158,38 @@ export class StreamClientScrcpy
             player: Util.parseString(params, 'player', true),
             udid: Util.parseString(params, 'udid', true),
             ws: Util.parseString(params, 'ws', true),
+            ...StreamClientScrcpy.parseVideoSettingsParams(params),
         };
+    }
+
+    // Optional video-settings overrides passed directly in the deep-link URL,
+    // e.g. `...&bitrate=8000000&maxFps=60&maxWidth=1920&maxHeight=1920&fitToScreen=1`.
+    // This makes an embed URL self-contained instead of relying on per-browser
+    // localStorage. Only keys actually present in the URL are returned, so they
+    // override the stored/preferred settings field-by-field.
+    private static parseVideoSettingsParams(params: URLSearchParams): Partial<ParamsStreamScrcpy> {
+        const result: Partial<ParamsStreamScrcpy> = {};
+        const intKeys: Array<'bitrate' | 'maxFps' | 'maxWidth' | 'maxHeight' | 'iFrameInterval'> = [
+            'bitrate',
+            'maxFps',
+            'maxWidth',
+            'maxHeight',
+            'iFrameInterval',
+        ];
+        intKeys.forEach((name) => {
+            const raw = params.get(name);
+            if (raw === null) {
+                return;
+            }
+            const value = parseInt(raw, 10);
+            if (!isNaN(value)) {
+                result[name] = value;
+            }
+        });
+        if (params.get('fitToScreen') !== null) {
+            result.fitToScreen = Util.parseBoolean(params, 'fitToScreen');
+        }
+        return result;
     }
 
     public OnDeviceMessage = (message: DeviceMessage): void => {
@@ -266,6 +297,10 @@ export class StreamClientScrcpy
             throw Error(`Invalid udid value: "${udid}"`);
         }
 
+        // Let a `fitToScreen` URL param take precedence over the stored value.
+        if (typeof fitToScreen !== 'boolean') {
+            fitToScreen = this.params.fitToScreen;
+        }
         this.fitToScreen = fitToScreen;
         if (!player) {
             if (typeof playerName !== 'string') {
@@ -290,6 +325,7 @@ export class StreamClientScrcpy
         if (!videoSettings) {
             videoSettings = player.getVideoSettings();
         }
+        videoSettings = this.applyUrlVideoSettings(videoSettings);
 
         const deviceView = document.createElement('div');
         deviceView.className = 'device-view';
@@ -395,6 +431,39 @@ export class StreamClientScrcpy
             return;
         }
         this.touchHandler = new FeaturedInteractionHandler(player, this);
+    }
+
+    // Merge any video-settings overrides from the deep-link URL on top of the
+    // stored/preferred settings. Absent params leave the base value untouched.
+    private applyUrlVideoSettings(base: VideoSettings): VideoSettings {
+        const { bitrate, maxFps, maxWidth, maxHeight, iFrameInterval } = this.params;
+        const hasBounds = typeof maxWidth === 'number' || typeof maxHeight === 'number';
+        if (
+            typeof bitrate !== 'number' &&
+            typeof maxFps !== 'number' &&
+            typeof iFrameInterval !== 'number' &&
+            !hasBounds
+        ) {
+            return base;
+        }
+        let bounds = base.bounds;
+        if (hasBounds) {
+            const width = typeof maxWidth === 'number' ? maxWidth : (maxHeight as number);
+            const height = typeof maxHeight === 'number' ? maxHeight : (maxWidth as number);
+            bounds = new Size(width, height);
+        }
+        return new VideoSettings({
+            crop: base.crop,
+            bitrate: typeof bitrate === 'number' ? bitrate : base.bitrate,
+            bounds,
+            maxFps: typeof maxFps === 'number' ? maxFps : base.maxFps,
+            iFrameInterval: typeof iFrameInterval === 'number' ? iFrameInterval : base.iFrameInterval,
+            sendFrameMeta: base.sendFrameMeta,
+            lockedVideoOrientation: base.lockedVideoOrientation,
+            displayId: base.displayId,
+            codecOptions: base.codecOptions,
+            encoderName: base.encoderName,
+        });
     }
 
     private applyNewVideoSettings(videoSettings: VideoSettings, saveToStorage: boolean): void {

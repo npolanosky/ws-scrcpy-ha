@@ -54,6 +54,54 @@ adb_devices:
   - 192.168.1.51:5555
 ```
 
+## Embedding in a Home Assistant dashboard
+
+You can drop a live, controllable device straight onto a dashboard with a
+**Webpage** card (or an `iframe` panel) pointing at a *deep-link* URL that opens
+the stream directly — skipping the device list.
+
+### Getting the deep-link
+
+1. Open the add-on Web UI and find your device in the list.
+2. Right-click the player link for it (e.g. **H264 Converter**) → **Copy link
+   address**. That URL already contains `action=stream`, the device `udid`, the
+   `player`, and the `ws` endpoint.
+
+### Baking in the quality settings (no localStorage needed)
+
+Append video-settings parameters to the URL so the embed always loads at the
+right quality regardless of which browser/window opens it:
+
+| Param | Meaning | Example |
+| --- | --- | --- |
+| `bitrate` | bits per second | `bitrate=8000000` (8 Mbps) |
+| `maxFps` | max frame rate | `maxFps=60` |
+| `maxWidth` / `maxHeight` | max size in px | `maxWidth=1920&maxHeight=1920` |
+| `iFrameInterval` | keyframe interval (s) | `iFrameInterval=5` |
+| `fitToScreen` | fill the iframe/viewport | `fitToScreen=1` |
+
+Any param you omit falls back to the stored/preferred value. For an embed,
+`fitToScreen=1` is usually what you want so the video fills the card.
+
+Full example:
+
+```
+http://homeassistant.local:8000/#!action=stream&udid=192.168.0.175:5555&player=mse&bitrate=8000000&maxFps=60&maxWidth=1920&maxHeight=1920&fitToScreen=1&ws=<the-ws-value-from-the-copied-link>
+```
+
+Lovelace Webpage card:
+
+```yaml
+type: iframe
+url: http://homeassistant.local:8000/#!action=stream&udid=192.168.0.175:5555&player=mse&bitrate=8000000&maxFps=60&fitToScreen=1&ws=...
+aspect_ratio: 50%
+```
+
+> Tip: pick `player=mse` (H264 Converter) for desktop and the Android app;
+> `player=broadway` is the universal software fallback (e.g. the iOS app). For
+> wireless devices, give the phone a static IP and fixed port so the `udid`
+> stays valid.
+
 ## Notes & limitations
 
 - **iOS support is not included.** The add-on builds the Android-only variant of
