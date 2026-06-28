@@ -2,6 +2,9 @@
 
 Web client for [Genymobile/scrcpy][scrcpy] and more.
 
+*AI DISCLOSURE: This has been assembled by Claude Opus 4.8 for my own personal usage and is not tested or otherwise supported outside my personal setup*
+
+
 > **This fork** packages ws-scrcpy as a **Home Assistant add-on**. To install it
 > in Home Assistant, add this repository to the Add-on Store:
 > `https://github.com/npolanosky/ws-scrcpy-ha` — then install **ws-scrcpy**. See
