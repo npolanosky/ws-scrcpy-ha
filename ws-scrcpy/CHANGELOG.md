@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.3
+
+- Add an embed layout mode (`&embed=1` on the stream URL) that scales the video
+  to fill an iframe/Webpage card and letterboxes to fit, instead of rendering at
+  the (often tiny) encoding resolution. Scoped so the normal full-window view is
+  unchanged; touch/click mapping stays accurate.
+
 ## 0.9.2
 
 - Persist the adb client RSA key on the `/data` volume so it survives add-on

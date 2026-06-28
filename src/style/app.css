@@ -124,6 +124,48 @@ body.stream {
     background-color: #000000;
 }
 
+/* Embedded mode (e.g. a Home Assistant iframe / Webpage card), enabled with
+   `&embed=1` in the stream URL. By default ws-scrcpy renders the video at the
+   encoding resolution; inside a fixed-size iframe that can look tiny. Here we
+   let the stream fill the card and scale to fit (letterboxed). Touch mapping
+   stays accurate because the interaction handler maps via getBoundingClientRect
+   and already accounts for letterboxing. Scoped to body.embed so the normal
+   full-window view is unchanged. */
+body.embed .device-view {
+    float: none;
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    height: 100%;
+}
+
+body.embed .control-buttons-list {
+    float: none;
+    flex: 0 0 auto;
+    height: 100%;
+    overflow-y: auto;
+    order: 2; /* keep the toolbar on the right, video on the left */
+}
+
+body.embed .video {
+    position: relative; /* containing block for the absolutely-positioned layers */
+    float: none;
+    flex: 1 1 auto;
+    width: auto !important; /* override the inline px size set per frame */
+    height: 100% !important;
+    min-width: 0;
+    min-height: 0;
+}
+
+body.embed .video-layer,
+body.embed .touch-layer {
+    top: 0;
+    left: 0;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain;
+}
+
 
 .control-buttons-list {
     float: right;

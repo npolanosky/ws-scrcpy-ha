@@ -14,4 +14,8 @@ export interface ParamsStreamScrcpy extends ParamsStream {
     maxWidth?: number;
     maxHeight?: number;
     iFrameInterval?: number;
+    // Layout mode for embedding (e.g. a Home Assistant iframe card): scale the
+    // video to fill the available space instead of rendering at the encoding
+    // resolution.
+    embed?: boolean;
 }
