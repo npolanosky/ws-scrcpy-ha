@@ -1,0 +1,34 @@
+name: ws-scrcpy
+version: "0.9.0"
+slug: ws_scrcpy
+description: Control and mirror Android devices from your browser (web client for scrcpy)
+url: https://github.com/npolanosky/ws-scrcpy-ha/tree/master/ws-scrcpy
+# Prebuilt images are published by CI to GHCR. Supervisor substitutes {arch}.
+image: ghcr.io/npolanosky/ws-scrcpy-ha-{arch}
+arch:
+  - amd64
+  - aarch64
+  - armv7
+# We provide our own ENTRYPOINT/CMD (tini -> run.sh) rather than the
+# Supervisor s6 init.
+init: false
+# Expose the web UI directly. ws-scrcpy uses WebSockets with a fixed base
+# pathname, which does not work behind Supervisor's dynamic ingress, so it is
+# served on a real port instead.
+ports:
+  8000/tcp: 8000
+ports_description:
+  8000/tcp: ws-scrcpy web interface
+webui: "http://[HOST]:[PORT:8000]/"
+# Required to reach USB-connected Android devices and react to plug/unplug.
+usb: true
+udev: true
+options:
+  port: 8000
+  debug: false
+  adb_devices: []
+schema:
+  port: port
+  debug: bool
+  adb_devices:
+    - str

@@ -2,6 +2,15 @@
 
 Web client for [Genymobile/scrcpy][scrcpy] and more.
 
+> **This fork** packages ws-scrcpy as a **Home Assistant add-on**. To install it
+> in Home Assistant, add this repository to the Add-on Store:
+> `https://github.com/npolanosky/ws-scrcpy-ha` — then install **ws-scrcpy**. See
+> [ws-scrcpy/DOCS.md](ws-scrcpy/DOCS.md) for setup and device-connection details.
+> The add-on metadata lives in [`ws-scrcpy/`](ws-scrcpy/), the container build in
+> [`Dockerfile`](Dockerfile) / [`run.sh`](run.sh), and image publishing in
+> [`.github/workflows/build.yaml`](.github/workflows/build.yaml). Everything below
+> is the upstream project documentation.
+
 ## Requirements
 
 Browser must support the following technologies:
