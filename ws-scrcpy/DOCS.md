@@ -109,6 +109,14 @@ aspect_ratio: 50%
 > wireless devices, give the phone a static IP and fixed port so the `udid`
 > stays valid.
 
+## Typing from a phone
+
+Tap the **Capture keyboard** button in the controls bar to raise your phone's
+on-screen keyboard; what you type is sent to the device, including Enter and
+Backspace. Tapping the video again dismisses the keyboard (re-tap the button to
+bring it back). Predictive-text/IME behavior varies between keyboards; plain
+typing is the most reliable. On desktop, a physical keyboard works as before.
+
 ## Notes & limitations
 
 - **iOS support is not included.** The add-on builds the Android-only variant of

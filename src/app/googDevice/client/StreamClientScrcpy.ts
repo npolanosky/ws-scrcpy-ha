@@ -12,6 +12,8 @@ import FilePushHandler from '../filePush/FilePushHandler';
 import DragAndPushLogger from '../DragAndPushLogger';
 import { KeyEventListener, KeyInputHandler } from '../KeyInputHandler';
 import { KeyCodeControlMessage } from '../../controlMessage/KeyCodeControlMessage';
+import { TextControlMessage } from '../../controlMessage/TextControlMessage';
+import KeyEvent from '../android/KeyEvent';
 import { BasePlayer, PlayerClass } from '../../player/BasePlayer';
 import GoogDeviceDescriptor from '../../../types/GoogDeviceDescriptor';
 import { ConfigureScrcpy } from './ConfigureScrcpy';
@@ -59,6 +61,7 @@ export class StreamClientScrcpy
     private player?: BasePlayer;
     private filePushHandler?: FilePushHandler;
     private fitToScreen?: boolean;
+    private imeInput?: HTMLInputElement;
     private readonly streamReceiver: StreamReceiverScrcpy;
 
     public static registerPlayer(playerClass: PlayerClass): void {
@@ -359,6 +362,8 @@ export class StreamClientScrcpy
         video.className = 'video';
         deviceView.appendChild(video);
         deviceView.appendChild(moreBox);
+        this.imeInput = this.createImeInput();
+        deviceView.appendChild(this.imeInput);
         player.setParent(video);
         player.pause();
 
@@ -395,13 +400,101 @@ export class StreamClientScrcpy
     public setHandleKeyboardEvents(enabled: boolean): void {
         if (enabled) {
             KeyInputHandler.addEventListener(this);
+            // Focus the hidden input so mobile browsers raise the on-screen
+            // keyboard. This must happen inside the user gesture (the toolbar
+            // button click) or mobile browsers will ignore the focus request.
+            this.imeInput?.focus();
         } else {
             KeyInputHandler.removeEventListener(this);
+            this.imeInput?.blur();
         }
     }
 
     public onKeyEvent(event: KeyCodeControlMessage): void {
         this.sendMessage(event);
+    }
+
+    private sendKeyCode(keyCode: number): void {
+        this.sendMessage(new KeyCodeControlMessage(KeyEvent.ACTION_DOWN, keyCode, 0, 0));
+        this.sendMessage(new KeyCodeControlMessage(KeyEvent.ACTION_UP, keyCode, 0, 0));
+    }
+
+    // A hidden, focusable text field that lets mobile soft keyboards drive the
+    // device. Physical keyboards keep using KeyInputHandler (keydown/keyup);
+    // because that handler calls preventDefault() on keys it maps, the
+    // beforeinput path below only fires for input a physical keyboard couldn't
+    // produce (i.e. characters typed on a mobile IME, which report no key code).
+    private createImeInput(): HTMLInputElement {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'ime-input';
+        input.autocapitalize = 'off';
+        input.autocomplete = 'off';
+        input.spellcheck = false;
+        input.setAttribute('autocorrect', 'off');
+        input.setAttribute('aria-hidden', 'true');
+        input.tabIndex = -1;
+        // Keep it in the DOM and focusable (so the keyboard shows) but invisible
+        // and non-interactive so it never covers or steals taps from the video.
+        const style = input.style;
+        style.position = 'absolute';
+        style.bottom = '0';
+        style.left = '0';
+        style.width = '1px';
+        style.height = '1px';
+        style.padding = '0';
+        style.margin = '0';
+        style.border = '0';
+        style.opacity = '0';
+        style.caretColor = 'transparent';
+        style.pointerEvents = 'none';
+
+        let composing = false;
+        const sendText = (text: string | null): void => {
+            if (text) {
+                this.sendMessage(new TextControlMessage(text));
+            }
+        };
+
+        input.addEventListener('compositionstart', () => {
+            composing = true;
+        });
+        input.addEventListener('compositionend', (event) => {
+            composing = false;
+            sendText((event as CompositionEvent).data);
+            input.value = '';
+        });
+        input.addEventListener('beforeinput', (event) => {
+            const e = event as InputEvent;
+            switch (e.inputType) {
+                case 'insertText':
+                case 'insertReplacementText':
+                case 'insertFromPaste':
+                    if (!composing) {
+                        sendText(e.data);
+                        e.preventDefault();
+                    }
+                    break;
+                case 'insertLineBreak':
+                case 'insertParagraph':
+                    this.sendKeyCode(KeyEvent.KEYCODE_ENTER);
+                    e.preventDefault();
+                    break;
+                case 'deleteContentBackward':
+                    this.sendKeyCode(KeyEvent.KEYCODE_DEL);
+                    e.preventDefault();
+                    break;
+                default:
+                    break;
+            }
+        });
+        // Never let the field accumulate text (it is only a relay).
+        input.addEventListener('input', () => {
+            if (!composing) {
+                input.value = '';
+            }
+        });
+        return input;
     }
 
     public sendNewVideoSetting(videoSettings: VideoSettings): void {

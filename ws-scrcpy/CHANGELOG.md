@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.6
+
+- The "Capture keyboard" button now raises the on-screen keyboard on mobile and
+  injects typed text (and Enter/Backspace) to the device. Physical keyboards on
+  desktop are unaffected. Note: predictive/IME composition behavior varies by
+  keyboard; basic typing works.
+
 ## 0.9.5
 
 - Add a "Copy HA embed URL" button to the Configure Stream dialog that generates
