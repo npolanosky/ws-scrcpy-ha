@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.5
+
+- Add a "Copy HA embed URL" button to the Configure Stream dialog that generates
+  a ready-to-use Home Assistant embed deep-link from the current settings
+  (player, bitrate, fps, size) — no more hand-editing URLs.
+
 ## 0.9.4
 
 - Embed mode now places the controls along the bottom (horizontal) instead of

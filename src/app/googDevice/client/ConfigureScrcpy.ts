@@ -43,6 +43,7 @@ export class ConfigureScrcpy extends BaseClient<ParamsStreamScrcpy, ConfigureScr
     private resetSettingsButton?: HTMLButtonElement;
     private loadSettingsButton?: HTMLButtonElement;
     private saveSettingsButton?: HTMLButtonElement;
+    private embedUrlOutput?: HTMLTextAreaElement;
     private playerSelectElement?: HTMLSelectElement;
     private displayIdSelectElement?: HTMLSelectElement;
     private encoderSelectElement?: HTMLSelectElement;
@@ -539,7 +540,25 @@ export class ConfigureScrcpy extends BaseClient<ParamsStreamScrcpy, ConfigureScr
         saveSettingsButton.addEventListener('click', this.saveSettings);
         buttonsWrapper.appendChild(saveSettingsButton);
 
+        const embedUrlButton = document.createElement('button');
+        embedUrlButton.classList.add('button');
+        embedUrlButton.innerText = 'Copy HA embed URL';
+        embedUrlButton.title = 'Copy a Home Assistant embed URL using the settings above';
+        embedUrlButton.addEventListener('click', this.copyEmbedUrl);
+        buttonsWrapper.appendChild(embedUrlButton);
+
         dialogBody.appendChild(buttonsWrapper);
+
+        // Read-only field that shows the generated embed URL so it can be copied
+        // manually when the Clipboard API is unavailable (e.g. plain-HTTP access).
+        const embedUrlOutput = (this.embedUrlOutput = document.createElement('textarea'));
+        embedUrlOutput.classList.add('text-area');
+        embedUrlOutput.readOnly = true;
+        embedUrlOutput.rows = 3;
+        embedUrlOutput.style.display = 'none';
+        embedUrlOutput.style.width = '100%';
+        embedUrlOutput.placeholder = 'Home Assistant embed URL';
+        dialogBody.appendChild(embedUrlOutput);
 
         const dialogFooter = document.createElement('div');
         dialogFooter.classList.add('dialog-footer', blockClass, dialogName);
@@ -613,6 +632,64 @@ export class ConfigureScrcpy extends BaseClient<ParamsStreamScrcpy, ConfigureScr
             const fitToScreen = this.getFitToScreenValue();
             player.saveVideoSettings(this.udid, videoSettings, fitToScreen, this.displayInfo);
         }
+    };
+
+    // Build a self-contained deep-link that opens this device's stream directly,
+    // in embed layout, using the settings currently entered in this dialog.
+    private buildEmbedUrl(): string | null {
+        const videoSettings = this.buildVideoSettings();
+        if (!videoSettings || !this.playerName) {
+            return null;
+        }
+        const playerClass = StreamClientScrcpy.getPlayers().find((p) => p.playerFullName === this.playerName);
+        const playerCode = playerClass ? playerClass.playerCodeName : this.playerName;
+        const q = new URLSearchParams();
+        q.set('action', StreamClientScrcpy.ACTION);
+        q.set('udid', this.udid);
+        q.set('player', playerCode);
+        if (this.params.ws) {
+            q.set('ws', this.params.ws);
+        }
+        q.set('bitrate', String(videoSettings.bitrate));
+        q.set('maxFps', String(videoSettings.maxFps));
+        if (videoSettings.bounds) {
+            q.set('maxWidth', String(videoSettings.bounds.width));
+            q.set('maxHeight', String(videoSettings.bounds.height));
+        }
+        if (videoSettings.iFrameInterval) {
+            q.set('iFrameInterval', String(videoSettings.iFrameInterval));
+        }
+        q.set('embed', '1');
+        const { protocol, host, pathname } = location;
+        return `${protocol}//${host}${pathname}#!${q.toString()}`;
+    }
+
+    private copyEmbedUrl = (): void => {
+        const url = this.buildEmbedUrl();
+        if (!url) {
+            this.statusText = 'Set a player and settings first';
+            this.updateStatus();
+            return;
+        }
+        // Show the URL so it can always be copied by hand, and select it.
+        if (this.embedUrlOutput) {
+            this.embedUrlOutput.style.display = '';
+            this.embedUrlOutput.value = url;
+            this.embedUrlOutput.focus();
+            this.embedUrlOutput.select();
+        }
+        let copied = false;
+        try {
+            copied = document.execCommand('copy');
+        } catch (e) {
+            copied = false;
+        }
+        // Best-effort async clipboard (only works in secure contexts).
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(url).catch(() => undefined);
+        }
+        this.statusText = copied ? 'Embed URL copied to clipboard' : 'Embed URL ready — press Ctrl/Cmd+C to copy';
+        this.updateStatus();
     };
 
     private openStream = (): void => {

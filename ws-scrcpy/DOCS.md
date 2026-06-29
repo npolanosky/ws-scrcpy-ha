@@ -62,10 +62,17 @@ the stream directly — skipping the device list.
 
 ### Getting the deep-link
 
-1. Open the add-on Web UI and find your device in the list.
-2. Right-click the player link for it (e.g. **H264 Converter**) → **Copy link
-   address**. That URL already contains `action=stream`, the device `udid`, the
-   `player`, and the `ws` endpoint.
+Easiest: open the add-on Web UI, click your device to open the **Configure
+Stream** dialog, choose the player and set the bitrate / max FPS / size you want,
+then click **Copy HA embed URL**. That produces a complete embed link (with
+`embed=1` and all the video settings baked in) ready to paste into a dashboard
+card. The URL is also shown in a box in the dialog so you can copy it by hand if
+your browser blocks clipboard access over plain HTTP.
+
+Alternatively, build it manually: right-click the player link for the device
+(e.g. **H264 Converter**) → **Copy link address** (that URL contains
+`action=stream`, the device `udid`, the `player`, and the `ws` endpoint), then
+append the parameters below.
 
 ### Baking in the quality settings (no localStorage needed)
 
