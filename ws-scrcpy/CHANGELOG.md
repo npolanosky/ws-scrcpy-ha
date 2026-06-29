@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.9.7
+
+- Add a **Sleep** button to the controls bar (sends KEYCODE_SLEEP) to put an
+  Android TV / Shield back to sleep without leaving the session open.
+- Add **on-demand connect with an idle timeout** (`&idleTimeout=<seconds>` on the
+  stream URL, default 60 in generated embed URLs). The stream no longer connects
+  when the page/dashboard loads — it shows a "Tap to connect" overlay, connects on
+  first interaction, and disconnects after the device receives no input for the
+  timeout, so it stops holding the device awake (and a dashboard with the card
+  open no longer wakes the TV). Set `idleTimeout=0` for an always-on embed.
+
 ## 0.9.6
 
 - The "Capture keyboard" button now raises the on-screen keyboard on mobile and

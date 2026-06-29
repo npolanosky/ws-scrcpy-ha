@@ -29,7 +29,17 @@ window.onload = async function (): Promise<void> {
     /// #endif
 
     if (action === StreamClientScrcpy.ACTION && typeof parsedQuery.get('udid') === 'string') {
-        StreamClientScrcpy.start(parsedQuery);
+        const idleRaw = parsedQuery.get('idleTimeout');
+        const idleSeconds = idleRaw ? parseInt(idleRaw, 10) : 0;
+        if (!isNaN(idleSeconds) && idleSeconds > 0) {
+            // On-demand mode: don't connect on page load (so just opening a
+            // dashboard never wakes the device). Connect on first interaction,
+            // and disconnect after `idleTimeout` seconds with no input so the
+            // device can sleep again.
+            startOnDemand(parsedQuery, idleSeconds * 1000);
+        } else {
+            StreamClientScrcpy.start(parsedQuery);
+        }
         return;
     }
 
@@ -110,3 +120,62 @@ window.onload = async function (): Promise<void> {
     }
     HostTracker.start();
 };
+
+// Connect-on-interaction with an inactivity timeout. Shows a "tap to connect"
+// overlay instead of streaming immediately; connects on the first tap/click/key,
+// resets an idle timer on every user input, and tears the connection down (so the
+// device-side scrcpy server exits and the device may sleep) once idle.
+function startOnDemand(query: URLSearchParams, idleMs: number): void {
+    const inputEvents: Array<keyof DocumentEventMap> = ['pointerdown', 'keydown', 'wheel', 'touchstart'];
+    let client: StreamClientScrcpy | undefined;
+    let idleTimer: ReturnType<typeof setTimeout> | undefined;
+
+    document.body.className = query.get('embed') ? 'stream embed' : 'stream';
+
+    const overlay = document.createElement('div');
+    overlay.className = 'on-demand-overlay';
+    const label = document.createElement('div');
+    label.className = 'on-demand-overlay-label';
+    label.innerText = 'Tap to connect';
+    overlay.appendChild(label);
+
+    const onInput = (): void => {
+        if (!client) {
+            return;
+        }
+        if (idleTimer) {
+            clearTimeout(idleTimer);
+        }
+        idleTimer = setTimeout(disconnect, idleMs);
+    };
+
+    function connect(): void {
+        if (client) {
+            return;
+        }
+        overlay.style.display = 'none';
+        client = StreamClientScrcpy.start(query);
+        inputEvents.forEach((type) => document.addEventListener(type, onInput, true));
+        onInput();
+    }
+
+    function disconnect(): void {
+        if (idleTimer) {
+            clearTimeout(idleTimer);
+            idleTimer = undefined;
+        }
+        inputEvents.forEach((type) => document.removeEventListener(type, onInput, true));
+        if (client) {
+            client.stop();
+            client = undefined;
+        }
+        overlay.style.display = '';
+    }
+
+    overlay.addEventListener('click', connect);
+    overlay.addEventListener('touchstart', (event) => {
+        event.preventDefault();
+        connect();
+    });
+    document.body.appendChild(overlay);
+}

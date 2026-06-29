@@ -86,9 +86,24 @@ right quality regardless of which browser/window opens it:
 | `maxWidth` / `maxHeight` | max size in px | `maxWidth=1920&maxHeight=1920` |
 | `iFrameInterval` | keyframe interval (s) | `iFrameInterval=5` |
 | `fitToScreen` | fill the iframe/viewport | `fitToScreen=1` |
+| `idleTimeout` | on-demand connect + idle disconnect (seconds) | `idleTimeout=60` |
 
 Any param you omit falls back to the stored/preferred value. For an embed,
 `fitToScreen=1` is usually what you want so the video fills the card.
+
+### On-demand connecting (don't wake the device just by opening the dashboard)
+
+With `idleTimeout=<seconds>` (included automatically, value `60`, in URLs from the
+**Copy HA embed URL** button), the embed does **not** connect when the page or
+dashboard loads. It shows a "Tap to connect" overlay, connects only when you
+interact with the card, and disconnects again after the device goes that many
+seconds without input — so the scrcpy session stops holding the device awake and
+simply opening the dashboard never powers the TV on. Set `idleTimeout=0` for an
+always-connected embed.
+
+Power on/off is best handled outside ws-scrcpy (e.g. an Android TV Remote / Fire
+TV remote card), and the controls bar has a **Sleep** button to put the device
+back to sleep on demand.
 
 Full example:
 

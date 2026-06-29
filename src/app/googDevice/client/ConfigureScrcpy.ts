@@ -660,6 +660,10 @@ export class ConfigureScrcpy extends BaseClient<ParamsStreamScrcpy, ConfigureScr
             q.set('iFrameInterval', String(videoSettings.iFrameInterval));
         }
         q.set('embed', '1');
+        // On-demand by default: don't connect until the user interacts, and drop
+        // the connection after this many idle seconds so the device can sleep.
+        // Set to 0 in the URL for an always-on embed.
+        q.set('idleTimeout', '60');
         const { protocol, host, pathname } = location;
         return `${protocol}//${host}${pathname}#!${q.toString()}`;
     }

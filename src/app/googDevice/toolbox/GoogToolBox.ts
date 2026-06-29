@@ -15,6 +15,13 @@ const BUTTONS = [
         icon: SvgImage.Icon.POWER,
     },
     {
+        // Deterministic "go to sleep" (unlike Power, which toggles). Lets you put
+        // an Android TV / Shield back to sleep without leaving the session open.
+        title: 'Sleep',
+        code: KeyEvent.KEYCODE_SLEEP,
+        icon: SvgImage.Icon.OFFLINE,
+    },
+    {
         title: 'Volume up',
         code: KeyEvent.KEYCODE_VOLUME_UP,
         icon: SvgImage.Icon.VOLUME_UP,

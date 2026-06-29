@@ -62,6 +62,7 @@ export class StreamClientScrcpy
     private filePushHandler?: FilePushHandler;
     private fitToScreen?: boolean;
     private imeInput?: HTMLInputElement;
+    private streamStop?: (ev?: string | Event) => void;
     private readonly streamReceiver: StreamReceiverScrcpy;
 
     public static registerPlayer(playerClass: PlayerClass): void {
@@ -283,6 +284,13 @@ export class StreamClientScrcpy
         }
     };
 
+    // Public teardown used by the on-demand wrapper to drop the connection
+    // (closes the WebSocket so the device-side scrcpy server exits and the
+    // device is free to sleep again).
+    public stop(): void {
+        this.streamStop?.();
+    }
+
     public onDisconnected = (): void => {
         this.streamReceiver.off('deviceMessage', this.OnDeviceMessage);
         this.streamReceiver.off('video', this.onVideo);
@@ -351,6 +359,7 @@ export class StreamClientScrcpy
                 this.player.stop();
             }
         };
+        this.streamStop = stop;
 
         const googMoreBox = (this.moreBox = new GoogMoreBox(udid, player, this));
         const moreBox = googMoreBox.getHolderElement();
