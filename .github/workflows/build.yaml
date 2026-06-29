@@ -27,19 +27,31 @@ permissions:
   contents: read
   packages: write
 
+# Cancel an in-progress build when a newer commit is pushed to the same ref.
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
       matrix:
         include:
+          # amd64 builds natively on the x86 runner.
           - arch: amd64
             platform: linux/amd64
+            runner: ubuntu-latest
+          # aarch64 builds natively on GitHub's free arm64 runner (no QEMU).
           - arch: aarch64
             platform: linux/arm64
+            runner: ubuntu-24.04-arm
+          # armv7 also runs on the arm64 runner; emulating 32-bit ARM on 64-bit
+          # ARM is far cheaper than on x86.
           - arch: armv7
             platform: linux/arm/v7
+            runner: ubuntu-24.04-arm
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -52,7 +64,9 @@ jobs:
           echo "version=${version}" >> "$GITHUB_OUTPUT"
           echo "image=ghcr.io/${owner}/ws-scrcpy-ha-${{ matrix.arch }}" >> "$GITHUB_OUTPUT"
 
+      # Only needed for the 32-bit ARM build; amd64 and aarch64 build natively.
       - name: Set up QEMU
+        if: matrix.platform == 'linux/arm/v7'
         uses: docker/setup-qemu-action@v3
 
       - name: Set up Buildx
